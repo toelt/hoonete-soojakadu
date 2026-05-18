@@ -10,7 +10,7 @@ Millistes Eesti omavalitsustes on hooned külmale kõige haavatavamad ning kus o
 ## Andmeallikad
 | Allikas | Tüüp | Sagedus | Roll |
 |---------|------|---------|------|
-| [Ehitisregister](https://avaandmete.ehr.ee) | CSV (staatiline) | Ühekordne | ~300000 hoonet — ehitusaasta, pindala, asukoht |
+| [Ehitisregister](https://livekluster.ehr.ee/ui/ehr/v1/infoportal/buildingdata) | CSV (staatiline) | Ühekordne | ~300000 hoonet — ehitusaasta, pindala, asukoht |
 | [Open-Meteo](https://open-meteo.com) | REST API | Tunnipõhine | Välistemperatuur 6 ilmajaamast |
 | [Elering — tarbimine](https://dashboard.elering.ee/api/system/with-plan) | REST API | Tunnipõhine, inkrementaalne | Tegelik riiklik tunnitarbimine (MWh) |
 | [Elering — Nord Pool](https://dashboard.elering.ee/api/nps/price) | REST API | Päevapõhine | Eesti börsielektri hind (€/MWh) |
