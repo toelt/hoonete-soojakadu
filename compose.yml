@@ -1,0 +1,236 @@
+# Hoonete soojakao analüüs — Airflow + dbt + Superset
+#
+# Teenused:
+#   analytics-db        — peamine PostgreSQL andmebaas (port 55434)
+#   airflow-db          — Airflow metaandmebaas
+#   airflow-init        — ühekordne initsialiseerimine
+#   airflow-apiserver   — Airflow UI ja REST API (port 8080)
+#   airflow-scheduler   — DAG-ide käivitamine
+#   airflow-dag-processor — DAG-ide parsimine
+#   superset-db         — Superset metaandmebaas
+#   superset-init       — Superset ühekordne initsialiseerimine
+#   superset            — Superset näidikulaud (port 8088)
+
+x-airflow-common: &airflow-common
+    image: apache/airflow:3.1.8
+    env_file:
+        - .env
+    environment: &airflow-common-env
+        AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_USER}:${AIRFLOW_PASSWORD}@airflow-db:5432/${AIRFLOW_DB}
+        AIRFLOW__CORE__FERNET_KEY: ""
+        AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+        AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+        AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-apiserver:8080/execution/"
+        AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW__API_AUTH__JWT_SECRET}
+        AIRFLOW__API_AUTH__JWT_ISSUER: ${AIRFLOW__API_AUTH__JWT_ISSUER}
+        AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+        AIRFLOW_CONN_ANALYTICS_DB: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@analytics-db:5432/${POSTGRES_DB}
+        POSTGRES_HOST: analytics-db
+        POSTGRES_PORT: "5432"
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+        PIP_ADDITIONAL_REQUIREMENTS: ${PIP_ADDITIONAL_REQUIREMENTS}
+    volumes:
+        - ./airflow/dags:/opt/airflow/dags
+        - airflow-logs:/opt/airflow/logs
+        - ./dbt_project:/opt/airflow/dbt_project
+        - ./scripts:/opt/airflow/scripts
+        - ./data:/opt/airflow/data
+    user: "${AIRFLOW_UID}:0"
+    depends_on: &airflow-common-depends-on
+        airflow-db:
+            condition: service_healthy
+        analytics-db:
+            condition: service_healthy
+
+services:
+    analytics-db:
+        image: pgduckdb/pgduckdb:18-v1.1.1
+        container_name: hooned-analytics-db
+        env_file:
+            - .env
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        ports:
+            - "${DB_PORT_HOST}:5432"
+        volumes:
+            - ./init:/docker-entrypoint-initdb.d
+            - analytics-db-volume:/var/lib/postgresql
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+            interval: 10s
+            retries: 5
+            start_period: 5s
+        restart: always
+
+    airflow-db:
+        image: postgres:16
+        container_name: hooned-airflow-db
+        environment:
+            POSTGRES_USER: ${AIRFLOW_USER}
+            POSTGRES_PASSWORD: ${AIRFLOW_PASSWORD}
+            POSTGRES_DB: ${AIRFLOW_DB}
+        volumes:
+            - airflow-db-volume:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "${AIRFLOW_USER}"]
+            interval: 10s
+            retries: 5
+            start_period: 5s
+        restart: always
+
+    airflow-init:
+        <<: *airflow-common
+        container_name: hooned-airflow-init
+        entrypoint: /bin/bash
+        command:
+            - -c
+            - |
+                mkdir -p /opt/airflow/{logs,dags,data}
+                /entrypoint airflow version
+                /entrypoint airflow config list >/dev/null
+                chown -R "${AIRFLOW_UID}:0" /opt/airflow/
+        environment:
+            <<: *airflow-common-env
+            AIRFLOW_DB_MIGRATE: "true"
+            AIRFLOW_WWW_USER_CREATE: "true"
+            AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME}
+            AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_WWW_USER_PASSWORD}
+            PIP_ADDITIONAL_REQUIREMENTS: ""
+        user: "0:0"
+        restart: "no"
+
+    airflow-apiserver:
+        <<: *airflow-common
+        container_name: hooned-airflow-apiserver
+        command: api-server
+        ports:
+            - "${AIRFLOW_PORT_HOST}:8080"
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "curl",
+                    "--fail",
+                    "http://localhost:8080/api/v2/monitor/health",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+        restart: always
+        depends_on:
+            <<: *airflow-common-depends-on
+            airflow-init:
+                condition: service_completed_successfully
+
+    airflow-scheduler:
+        <<: *airflow-common
+        container_name: hooned-airflow-scheduler
+        command: scheduler
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+        restart: always
+        depends_on:
+            <<: *airflow-common-depends-on
+            airflow-init:
+                condition: service_completed_successfully
+
+    airflow-dag-processor:
+        <<: *airflow-common
+        container_name: hooned-airflow-dagproc
+        command: dag-processor
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"',
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 30s
+        restart: always
+        depends_on:
+            <<: *airflow-common-depends-on
+            airflow-init:
+                condition: service_completed_successfully
+
+    superset-db:
+        image: postgres:16
+        container_name: hooned-superset-db
+        environment:
+            POSTGRES_USER: ${SUPERSET_DB_USER}
+            POSTGRES_PASSWORD: ${SUPERSET_DB_PASSWORD}
+            POSTGRES_DB: ${SUPERSET_DB_NAME}
+        volumes:
+            - superset-db-volume:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "pg_isready -U ${SUPERSET_DB_USER} -d ${SUPERSET_DB_NAME}",
+                ]
+            interval: 5s
+            retries: 10
+        restart: always
+
+    superset-init:
+        build:
+            context: .
+            dockerfile: Dockerfile.superset
+        container_name: hooned-superset-init
+        depends_on:
+            superset-db:
+                condition: service_healthy
+        volumes:
+            - ./superset/superset_config.py:/app/superset_config.py
+            - superset-home:/app/superset_home
+        environment:
+            SUPERSET_CONFIG_PATH: /app/superset_config.py
+            DATABASE_URI: "postgresql+psycopg2://${SUPERSET_DB_USER}:${SUPERSET_DB_PASSWORD}@superset-db:5432/${SUPERSET_DB_NAME}"
+            SECRET_KEY: ${SUPERSET_SECRET_KEY}
+            ADMIN_USERNAME: ${SUPERSET_ADMIN_USER}
+            ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+            ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL}
+        command:
+            - /bin/sh
+            - -c
+            - "superset db upgrade && superset fab create-admin --username $${ADMIN_USERNAME} --firstname Admin --lastname User --email $${ADMIN_EMAIL} --password $${ADMIN_PASSWORD} && superset init"
+        restart: "no"
+
+    superset:
+        build:
+            context: .
+            dockerfile: Dockerfile.superset
+        container_name: hooned-superset
+        depends_on:
+            superset-init:
+                condition: service_completed_successfully
+        ports:
+            - "${SUPERSET_PORT_HOST}:8088"
+        volumes:
+            - ./superset/superset_config.py:/app/superset_config.py
+            - superset-home:/app/superset_home
+        environment:
+            SUPERSET_CONFIG_PATH: /app/superset_config.py
+            DATABASE_URI: "postgresql+psycopg2://${SUPERSET_DB_USER}:${SUPERSET_DB_PASSWORD}@superset-db:5432/${SUPERSET_DB_NAME}"
+            SECRET_KEY: ${SUPERSET_SECRET_KEY}
+        command: ["/app/docker/entrypoints/run-server.sh"]
+        restart: always
+
+volumes:
+    analytics-db-volume:
+    airflow-db-volume:
+    airflow-logs:
+    superset-db-volume:
+    superset-home:
