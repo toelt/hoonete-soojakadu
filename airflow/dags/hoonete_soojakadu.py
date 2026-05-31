@@ -66,16 +66,17 @@ def lae_ehitisregister():
 
 @task
 def dbt_build():
-    """Käivitab dbt run — loob staging.stg_hooned vaate."""
-    result = subprocess.run(
-        ["dbt", "run", "--profiles-dir", "/opt/airflow/dbt_project"],
-        cwd="/opt/airflow/dbt_project",
-        capture_output=True,
-        text=True,
-    )
-    print(result.stdout)
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr)
+    """Käivitab dbt seed + dbt run."""
+    for cmd in (["dbt", "seed"], ["dbt", "run"]):
+        result = subprocess.run(
+            cmd + ["--profiles-dir", "/opt/airflow/dbt_project"],
+            cwd="/opt/airflow/dbt_project",
+            capture_output=True,
+            text=True,
+        )
+        print(result.stdout)
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr)
 
 
 with DAG(
