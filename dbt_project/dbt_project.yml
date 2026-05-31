@@ -1,25 +1,14 @@
-name: 'hooned'
-version: '1.0.0'
-config-version: 2
-
-profile: 'hooned'
+name: hoonete_soojakadu
+version: "1.0.0"
+profile: hoonete_soojakadu
 
 model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
 macro-paths: ["macros"]
-
 target-path: "target"
-clean-targets:
-  - "target"
-  - "dbt_packages"
+clean-targets: ["target"]
 
 models:
-  hooned:
-    staging:
-      +materialized: view
-    intermediate:
-      +materialized: ephemeral
-    marts:
-      +materialized: table
+    hoonete_soojakadu:
+        staging:
+            +materialized: view
+            +schema: staging

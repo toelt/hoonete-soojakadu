@@ -23,6 +23,9 @@ dbt_packages/
 .user.yml
 logs/
 
+# Andmed
+data/
+
 # muu
 tmp/
 temp/
