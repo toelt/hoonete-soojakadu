@@ -10,7 +10,6 @@
 #   superset-db         — Superset metaandmebaas
 #   superset-init       — Superset ühekordne initsialiseerimine
 #   superset            — Superset näidikulaud (port 8088)
-#   dbt                 — dbt konteiner mudelite käivitamiseks
 
 x-airflow-common: &airflow-common
     image: apache/airflow:3.1.8
