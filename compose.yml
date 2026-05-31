@@ -33,7 +33,7 @@ x-airflow-common: &airflow-common
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         POSTGRES_DB: ${POSTGRES_DB}
-        PIP_ADDITIONAL_REQUIREMENTS: ${PIP_ADDITIONAL_REQUIREMENTS}
+        _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS}
     volumes:
         - ./airflow/dags:/opt/airflow/dags
         - airflow-logs:/opt/airflow/logs
@@ -98,11 +98,11 @@ services:
                 chown -R "${AIRFLOW_UID}:0" /opt/airflow/
         environment:
             <<: *airflow-common-env
-            AIRFLOW_DB_MIGRATE: "true"
-            AIRFLOW_WWW_USER_CREATE: "true"
-            AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME}
-            AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_WWW_USER_PASSWORD}
-            PIP_ADDITIONAL_REQUIREMENTS: ""
+            _AIRFLOW_DB_MIGRATE: "true"
+            _AIRFLOW_WWW_USER_CREATE: "true"
+            _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME}
+            _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD}
+            _PIP_ADDITIONAL_REQUIREMENTS: ""
         user: "0:0"
         restart: "no"
 
