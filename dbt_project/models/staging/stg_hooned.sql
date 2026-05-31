@@ -10,7 +10,16 @@ WITH hooned AS (
     AND suletud_netopind > 0
     AND suletud_netopind < 100000
     AND ov_nimi IS NOT NULL
+),
+
+dedup AS (
+  SELECT DISTINCT ON (ehr_kood) *
+  FROM hooned
+  ORDER BY ehr_kood
 )
-SELECT DISTINCT ON (ehr_kood) *
-FROM hooned
-ORDER BY ehr_kood
+
+SELECT
+  d.*,
+  COALESCE(o.ov_kood, '0000') AS ov_kood
+FROM dedup d
+LEFT JOIN {{ ref('omavalitsused') }} o ON d.ov_nimi = o.ov_nimi

@@ -3,12 +3,20 @@ version: "1.0.0"
 profile: hoonete_soojakadu
 
 model-paths: ["models"]
+seed-paths: ["seeds"]
 macro-paths: ["macros"]
 target-path: "target"
 clean-targets: ["target"]
+
+seeds:
+    hoonete_soojakadu:
+        +schema: marts
 
 models:
     hoonete_soojakadu:
         staging:
             +materialized: view
             +schema: staging
+        marts:
+            +materialized: table
+            +schema: marts
