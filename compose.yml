@@ -229,6 +229,27 @@ services:
         command: ["/app/docker/entrypoints/run-server.sh"]
         restart: always
 
+    dbt:
+        build:
+            context: .
+            dockerfile: Dockerfile.dbt
+        container_name: hooned-dbt
+        environment:
+            POSTGRES_HOST: analytics-db
+            POSTGRES_PORT: "5432"
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        env_file:
+            - .env
+        depends_on:
+            analytics-db:
+                condition: service_healthy
+        volumes:
+            - ./dbt_project:/dbt
+        working_dir: /dbt
+        tty: true
+
 volumes:
     analytics-db-volume:
     airflow-db-volume:
