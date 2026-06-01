@@ -13,7 +13,7 @@ def lae_ehitisregister():
     """Laeb Ehitisregistri CSV andmebaasi (kui pole veel laetud)."""
     hook = PostgresHook(postgres_conn_id="analytics_db")
 
-    hook.run("CREATE SCHEMA IF NOT EXISTS staging")
+    hook.run("CREATE SCHEMA IF NOT EXISTS staging", autocommit=True)
     hook.run("""
         CREATE TABLE IF NOT EXISTS staging.ehitisregister_raw (
             ehr_kood        TEXT,
