@@ -15,7 +15,7 @@ docker compose ps
 
 Kõk konteinerid peavad olema `healthy` või `Up`.
 
-### Samm 1.2: Airflow DAG käivitamine
+### Samm 1.2: Airflow DAG käivitamine  
 
 ### Samm 1.3: Kontrolli, kas Ehitisregistri andmed laeti
 
