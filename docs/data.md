@@ -31,8 +31,9 @@ Laetud Eesti **Ehitisregistri** CSV-failist (~300 000 rida). Tegemist on ühekor
 Puhastatud vaade, mis on ehitatud `ehitisregister_raw` peale:
 
 - **Filtreerimine**: Ainult hooned, millel on korrektne ehitusaasta (1800–2026), positiivne netopind (< 100 000 m²) ja määratud omavalitsus.
-- **Duplikaatide eemaldamine**: `DISTINCT ON (ehr_kood)` eemaldab duplikaadid.
-- **Omavalitsuse koodi otsing**: Ühendatakse `omavalitsused` seed-tabeliga, et lisada standardiseeritud `ov_kood` (3-kohaline omavalitsuse kood).
+- **Duplikaatide eemaldamine**: `DISTINCT ON (ehr_kood)` eemaldab duplikaadid, eelistades suurima pindalaga kirjet (tõenäoliselt põhihoone).
+- **Nime normaliseerimine**: Ühendatakse `omavalitsus_mapping` tabeliga, et teisendada vanad (enne 2017) omavalitsuste nimed uutele.
+- **Omavalitsuse koodi otsing**: Ühendatakse `omavalitsused` seed-tabeliga, et lisada standardiseeritud EHAK kood.
 
 | Veerg | Kirjeldus |
 |--------|-------------|
@@ -68,11 +69,22 @@ Ehitusaastate jaotus agregeerituna **kümnendite kaupa**:
 | `hoonete_arv` | Hoonete arv selles kümnendis |
 | `kogupindala_m2` | Kogu netopind selles kümnendis |
 
-### 5. Seed-tabel: `omavalitsused` (CSV seed-failist)
+### 5. Seed-tabel: `marts.omavalitsused` (CSV seed-failist)
 
-Viitetabel, mis seob Eesti omavalitsuste nimed standardiseeritud 3-kohaliste koodidega (79 omavalitsust). Kasutatakse `stg_hooned` vaates omavalitsuse andmete normaliseerimiseks.
+Viitetabel, mis seob Eesti omavalitsuste nimed standardiseeritud koodidega (79 omavalitsust). Kasutatakse `stg_hooned` vaates omavalitsuse andmete normaliseerimiseks.
 
 | Veerg | Kirjeldus |
 |--------|-------------|
-| `ov_kood` | Standardiseeritud 3-kohaline omavalitsuse kood |
-| `ov_nimi` | Omavalitsuse nimi |
+| `ov_kood` | Standardiseeritud omavalitsuse EHAK kood |
+| `ov_nimi` | Omavalitsuse nimi (2017 haldusreformi järgne) |
+
+### 6. Seed-tabel: `marts.omavalitsus_mapping` (CSV seed-failist)
+
+Vastendustabel, mis seob ehitisregistris esinevad vanad omavalitsuste nimed (enne 2017. aasta haldusreformi) uute nimede külge. Eesti haldusreform 2017 liitis ~213 omavalitsust 79-ks — ehitisregistris esinevad mõlema ajastu nimed.
+
+`stg_hooned` normaliseerib `ov_nimi` väärtuse läbi selle tabeli enne joini `omavalitsused` tabeliga. Kui vana nime vastet ei leita, kasutatakse originaalnime (mis võib olla juba uus nimi).
+
+| Veerg | Kirjeldus |
+|--------|-------------|
+| `vana_nimi` | Omavalitsuse nimi ehitisregistris (enne 2017 reformi) |
+| `uus_nimi` | Vastav omavalitsuse nimi pärast 2017 haldusreformi |
