@@ -1,10 +1,12 @@
 ov_kood,ov_nimi
+0120,Alutaguse vald
 0130,Anija vald
 0141,Antsla vald
 0160,Elva vald
 0170,Haapsalu linn
 0184,Haljala vald
 0191,Harku vald
+0193,Häädemeeste vald
 0198,Hiiumaa vald
 0214,Jõelähtme vald
 0225,Jõgeva vald
@@ -41,11 +43,14 @@ ov_kood,ov_nimi
 0624,Põhja-Pärnumaa vald
 0638,Põhja-Sakala vald
 0641,Põltsamaa vald
+0651,Raasiku vald
 0655,Põlva vald
 0670,Pärnu linn
 0698,Rae vald
 0707,Rakvere linn
+0708,Räpina vald
 0714,Rakvere vald
+0725,Saue vald
 0735,Rapla vald
 0750,Ruhnu vald
 0761,Rõuge vald
@@ -54,8 +59,10 @@ ov_kood,ov_nimi
 0806,Saku vald
 0823,Setomaa vald
 0834,Sillamäe linn
+0857,Valga vald
 0865,Tallinn
 0882,Tapa vald
+0890,Viimsi vald
 0897,Tartu linn
 0901,Tartu vald
 0918,Toila vald
