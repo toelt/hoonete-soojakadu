@@ -32,6 +32,7 @@ SELECT
   n.suletud_netopind,
   n.ov_nimi_norm AS ov_nimi,
   n.energiamargis,
-  COALESCE(o.ov_kood, '0000') AS ov_kood
+  COALESCE(o.ov_kood, '0000') AS ov_kood,
+  {{ u_vaartus('n.ehitusaasta') }} AS u_vaartus
 FROM normaliseeritud n
 LEFT JOIN {{ ref('omavalitsused') }} o ON n.ov_nimi_norm = o.ov_nimi
