@@ -1,7 +1,10 @@
 version: 2
 
 sources:
-  - name: staging
-    schema: staging
-    tables:
-      - name: ehitisregister_raw
+    - name: staging
+      schema: staging
+      tables:
+          - name: ehitisregister_raw
+          - name: ilmaandmed_raw
+          - name: tarbimine_raw
+          - name: elektrihinnad_raw

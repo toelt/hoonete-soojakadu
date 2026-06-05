@@ -147,6 +147,7 @@ hoone_paeva_kadu AS (
     h.ov_nimi,
     h.suletud_netopind,
     i.kuupaev,
+    i.keskmine_temp,
     h.u_vaartus
       * h.suletud_netopind
       * GREATEST(21 - i.keskmine_temp, 0)
@@ -161,6 +162,7 @@ SELECT
   ov_kood,
   ov_nimi,
   kuupaev,
+  MAX(keskmine_temp)        AS keskmine_temp,
   COUNT(DISTINCT ehr_kood)  AS hoonete_arv,
   SUM(suletud_netopind)     AS kogupindala_m2,
   SUM(soojakadu_kwh)        AS soojakadu_kwh_paevas
