@@ -314,6 +314,20 @@ def dbt_build():
             raise RuntimeError(result.stderr)
 
 
+@task
+def dbt_test():
+    """Käivitab dbt test — kontrollib andmekvaliteeti pärast laadimist."""
+    result = subprocess.run(
+        ["dbt", "test", "--profiles-dir", "/opt/airflow/dbt_project"],
+        cwd="/opt/airflow/dbt_project",
+        capture_output=True,
+        text=True,
+    )
+    print(result.stdout)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+
+
 with DAG(
     dag_id="hoonete_soojakadu",
     description="Ehitisregister CSV + Open-Meteo ilm + Elering tarbimine + Nord Pool hind → staging + dbt",
@@ -322,7 +336,4 @@ with DAG(
     catchup=False,
     tags=["sprint2"],
 ) as dag:
-    lae_ehitisregister() >> dbt_build()
-    lae_ilmaandmed() >> dbt_build()
-    lae_tarbimine() >> dbt_build()
-    lae_elektrihinnad() >> dbt_build()
+    [lae_ehitisregister(), lae_ilmaandmed(), lae_tarbimine(), lae_elektrihinnad()] >> dbt_build() >> dbt_test()

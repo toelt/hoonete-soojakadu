@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: stg_hooned
+    columns:
+      - name: ehr_kood
+        data_tests:
+          - not_null
+          - unique
+      - name: ehitusaasta
+        data_tests:
+          - not_null
+      - name: suletud_netopind
+        data_tests:
+          - not_null
+      - name: ov_nimi
+        data_tests:
+          - not_null
+      - name: ov_kood
+        data_tests:
+          - not_null
+      - name: energiamargis
+        data_tests:
+          - accepted_values:
+              values: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+              quote: true
+              config:
+                severity: warn
+      - name: u_vaartus
+        data_tests:
+          - not_null
+
+  - name: stg_ilmaandmed
+    columns:
+      - name: jaam_kood
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['TLN', 'TRT', 'PRN', 'NRV', 'VRU', 'KRS']
+              quote: true
+      - name: kuupaev
+        data_tests:
+          - not_null
+      - name: keskmine_temp
+        data_tests:
+          - not_null
+
+  - name: stg_elektrihinnad
+    columns:
+      - name: kuupaev
+        data_tests:
+          - not_null
+          - unique
+      - name: keskmine_hind_eur_mwh
+        data_tests:
+          - not_null
+
+  - name: stg_tarbimine
+    columns:
+      - name: kuupaev
+        data_tests:
+          - not_null
+          - unique
+      - name: tarbimine_mwh
+        data_tests:
+          - not_null

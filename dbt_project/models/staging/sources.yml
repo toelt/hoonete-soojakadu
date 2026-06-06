@@ -5,6 +5,10 @@ sources:
       schema: staging
       tables:
           - name: ehitisregister_raw
+            columns:
+              - name: ehr_kood
+                data_tests:
+                  - not_null
           - name: ilmaandmed_raw
           - name: tarbimine_raw
           - name: elektrihinnad_raw
