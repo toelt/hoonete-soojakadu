@@ -1,17 +1,16 @@
--- mart_soojakadu_ov: Soojakao intensiivsus (kWh/m²/aastas) omavalitsuse kaupa.
--- Allikas: int_soojakadu (päevane soojakadu OV × päev)
+-- mart_soojakadu_ov: Soojakao intensiivsus omavalitsuse kaupa, päevase detailsusega.
+-- Superset saab ise agregeerida nädala/kuu/aasta kaupa ja seada kuupäeva filtri.
 -- Mõõdik #1 arhitektuuris: Soojakao intensiivsus
 SELECT
     ov_kood,
     ov_nimi,
-    MAX(hoonete_arv)                                               AS hoonete_arv,
-    MAX(kogupindala_m2)                                            AS kogupindala_m2,
-    SUM(soojakadu_kwh_paevas)                                      AS soojakadu_kwh_aastas,
+    kuupaev,
+    hoonete_arv,
+    kogupindala_m2,
+    keskmine_temp,
+    soojakadu_kwh_paevas,
     ROUND(
-        SUM(soojakadu_kwh_paevas) / NULLIF(MAX(kogupindala_m2), 0),
-        2
-    )                                                              AS soojakao_intensiivsus_kwh_m2_aastas,
-    COUNT(DISTINCT kuupaev)                                        AS paevade_arv
+        soojakadu_kwh_paevas / NULLIF(kogupindala_m2, 0),
+        3
+    ) AS soojakao_intensiivsus_kwh_m2_paevas
 FROM {{ ref('int_soojakadu') }}
-GROUP BY ov_kood, ov_nimi
-ORDER BY soojakao_intensiivsus_kwh_m2_aastas DESC

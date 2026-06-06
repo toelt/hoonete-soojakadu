@@ -317,12 +317,17 @@ def dbt_build():
 @task
 def dbt_test():
     """Käivitab dbt test — kontrollib andmekvaliteeti pärast laadimist."""
+    import time
+
+    t0 = time.time()
     result = subprocess.run(
         ["dbt", "test", "--profiles-dir", "/opt/airflow/dbt_project"],
         cwd="/opt/airflow/dbt_project",
         capture_output=True,
         text=True,
     )
+    elapsed = time.time() - t0
+    print(f"[ajastus] dbt test kestis {elapsed:.1f}s")
     print(result.stdout)
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
@@ -336,4 +341,8 @@ with DAG(
     catchup=False,
     tags=["sprint2"],
 ) as dag:
-    [lae_ehitisregister(), lae_ilmaandmed(), lae_tarbimine(), lae_elektrihinnad()] >> dbt_build() >> dbt_test()
+    (
+        [lae_ehitisregister(), lae_ilmaandmed(), lae_tarbimine(), lae_elektrihinnad()]
+        >> dbt_build()
+        >> dbt_test()
+    )

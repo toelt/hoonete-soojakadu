@@ -1,12 +1,12 @@
 hoonete_soojakadu:
-  target: dev
-  outputs:
-    dev:
-      type: postgres
-      host: "{{ env_var('POSTGRES_HOST', 'analytics-db') }}"
-      port: 5432
-      user: "{{ env_var('POSTGRES_USER', 'projekt') }}"
-      pass: "{{ env_var('POSTGRES_PASSWORD', 'projekt') }}"
-      dbname: "{{ env_var('POSTGRES_DB', 'projekt') }}"
-      schema: public
-      threads: 2
+    target: dev
+    outputs:
+        dev:
+            type: postgres
+            host: "{{ env_var('POSTGRES_HOST', 'analytics-db') }}"
+            port: 5432
+            user: "{{ env_var('POSTGRES_USER', 'projekt') }}"
+            pass: "{{ env_var('POSTGRES_PASSWORD', 'projekt') }}"
+            dbname: "{{ env_var('POSTGRES_DB', 'projekt') }}"
+            schema: public
+            threads: 4

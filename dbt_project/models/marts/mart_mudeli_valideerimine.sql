@@ -30,20 +30,36 @@ vordlus AS (
         ABS(m.mudel_kwh - t.tegelik_kwh) AS absoluutne_viga_kwh
     FROM mudel m
     INNER JOIN tegelik t ON m.kuupaev = t.kuupaev
+),
+
+-- Pearsoni r arvutatakse eraldi, et vältida topeltkutset makrole
+korr AS (
+    SELECT {{ pearson_r('mudel_kwh', 'tegelik_kwh') }} AS r
+    FROM vordlus
+),
+
+-- Ülejäänud agregaadid
+agg AS (
+    SELECT
+        COUNT(*)                                   AS paevade_arv,
+        ROUND(AVG(mudel_kwh), 0)                   AS keskmine_mudel_kwh_paevas,
+        ROUND(AVG(tegelik_kwh), 0)                 AS keskmine_tegelik_kwh_paevas,
+        ROUND(AVG(absoluutne_viga_kwh), 0)         AS keskmine_absoluutne_viga_kwh,
+        ROUND(
+            AVG(absoluutne_viga_kwh)
+            / NULLIF(AVG(tegelik_kwh), 0) * 100,
+            1
+        )                                           AS mape_protsent
+    FROM vordlus
 )
 
 SELECT
-    COUNT(*)                                                  AS paevade_arv,
-    ROUND({{ pearson_r('mudel_kwh', 'tegelik_kwh') }}::numeric, 4) AS pearson_r,
-    ROUND(
-        POWER({{ pearson_r('mudel_kwh', 'tegelik_kwh') }}, 2)::numeric,
-        4
-    )                                                         AS r_ruut,
-    ROUND(AVG(mudel_kwh), 0)                                  AS keskmine_mudel_kwh_paevas,
-    ROUND(AVG(tegelik_kwh), 0)                                AS keskmine_tegelik_kwh_paevas,
-    ROUND(AVG(absoluutne_viga_kwh), 0)                        AS keskmine_absoluutne_viga_kwh,
-    ROUND(
-        AVG(absoluutne_viga_kwh) / NULLIF(AVG(tegelik_kwh), 0) * 100,
-        1
-    )                                                         AS mape_protsent
-FROM vordlus
+    a.paevade_arv,
+    ROUND(k.r::numeric, 4)  AS pearson_r,
+    ROUND(POWER(k.r, 2)::numeric, 4) AS r_ruut,
+    a.keskmine_mudel_kwh_paevas,
+    a.keskmine_tegelik_kwh_paevas,
+    a.keskmine_absoluutne_viga_kwh,
+    a.mape_protsent
+FROM agg a
+CROSS JOIN korr k

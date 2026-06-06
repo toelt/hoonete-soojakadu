@@ -3,7 +3,7 @@
   --   r = (n·Σxy − Σx·Σy) / √( (n·Σx² − (Σx)²) · (n·Σy² − (Σy)²) )
   --
   -- Kasutamine:
-  --   SELECT ov_kood, {% raw %}{{ pearson_r('keskmine_temp', 'soojakadu_kwh_paevas') }}{% endraw %} AS r
+  --   SELECT ov_kood, pearson_r('keskmine_temp', 'soojakadu_kwh_paevas') AS r
   --   FROM int_soojakadu GROUP BY ov_kood
   --
   -- Tulemus NULL, kui dispersioon mõlemas muutujas on null (kõik väärtused samad)
