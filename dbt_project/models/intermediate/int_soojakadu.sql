@@ -153,7 +153,7 @@ hoone_paeva_kadu AS (
       * GREATEST(21 - i.keskmine_temp, 0)
       * 24 / 1000.0 AS soojakadu_kwh
   FROM hooned h
-  JOIN ov_jaam oj ON h.ov_kood = oj.ov_kood::integer
+  JOIN ov_jaam oj ON h.ov_kood = oj.ov_kood
   JOIN ilm i     ON oj.jaam_kood = i.jaam_kood
 )
 
