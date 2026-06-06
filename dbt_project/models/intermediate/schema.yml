@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_soojakadu
+    columns:
+      - name: ov_kood
+        data_tests:
+          - not_null
+      - name: kuupaev
+        data_tests:
+          - not_null
+      - name: soojakadu_kwh_paevas
+        data_tests:
+          - not_null
+          - not_negative
+      - name: hoonete_arv
+        data_tests:
+          - not_null
+          - positive_value
+      - name: kogupindala_m2
+        data_tests:
+          - not_null
+          - positive_value

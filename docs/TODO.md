@@ -18,6 +18,13 @@ Viimati uuendatud: 2026-06-05
 | `u_vaartus` makro — CASE WHEN lookup ehitusaasta järgi | `dbt_project/macros/u_vaartus.sql` |
 | `int_soojakadu` — soojakao arvutus OV × päev, OV→ilmajaam vastendus | `dbt_project/models/intermediate/int_soojakadu.sql` |
 | `dbt_build()` DAG task (seed + run) | `airflow/dags/hoonete_soojakadu.py` |
+| `dbt_test()` DAG task (peale build-i) | `airflow/dags/hoonete_soojakadu.py` |
+| `sources.yml` — `ehitisregister_raw.ehr_kood` test | `dbt_project/models/staging/sources.yml` |
+| Staging testid (`stg_hooned`, `stg_ilmaandmed`, `stg_elektrihinnad`, `stg_tarbimine`) | `dbt_project/models/staging/schema.yml` |
+| Intermediate testid (`int_soojakadu`) | `dbt_project/models/intermediate/schema.yml` |
+| Mart testid (4 mudelit) | `dbt_project/models/marts/schema.yml` |
+| Generictestid `positive_value` ja `not_negative` | `dbt_project/macros/test_positive_value.sql`, `test_not_negative.sql` |
+| Singulartestid Pearsoni r ja R² vahemike jaoks | `dbt_project/tests/` (3 faili) |
 | `.env` + `.gitignore` | juur |
 | Intermediate kiht `dbt_project.yml`-is | `dbt_project/dbt_project.yml` |
 
@@ -94,13 +101,12 @@ Viimati uuendatud: 2026-06-05
 
 ## 🟡 Olulised, aga mitte blokeerivad
 
-### 10. `dbt test` integratsioon
+### ~~10. `dbt test` integratsioon~~ ✅ Valmis
 
-- Arhitektuur: `dbt test` kontrollib tühjade väljade osakaalu OV lõikes.
-- Praegu pole ühtegi testi defineeritud ega DAG-is `dbt test` jooksutust.
-- **Vaja**:
-  - Testi definitsioonid `sources.yml`-is ja mart-kihtide `schema.yml`-is.
-  - `dbt test` kui DAG task (peale `dbt build`-i).
+- 60 testi üle kõigi kihtide (sources, staging, intermediate, marts).
+- Kasutatakse nii standardteste (`not_null`, `unique`, `accepted_values`) kui kohandatud genericteste (`positive_value`, `not_negative`) ja singularteste (Pearsoni r vahemik).
+- `dbt_test()` task lisatud DAG-i — jookseb automaatselt peale `dbt_build`-i.
+- `mart_mudeli_valideerimine` testid on `severity: warn` — aktiveeruvad kui ilma- ja tarbimisandmete perioodid joonduvad.
 
 ### 11. `staging` sources.yml on puudulik
 
