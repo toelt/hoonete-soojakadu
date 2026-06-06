@@ -167,4 +167,5 @@ SELECT
   SUM(suletud_netopind)     AS kogupindala_m2,
   SUM(soojakadu_kwh)        AS soojakadu_kwh_paevas
 FROM hoone_paeva_kadu
+where kuupaev >= date_add('day', -365, current_date)  -- viimase 365 päeva andmed
 GROUP BY ov_kood, ov_nimi, kuupaev
