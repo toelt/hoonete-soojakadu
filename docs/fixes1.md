@@ -2,23 +2,20 @@
 
 ---
 
-## 1. `int_soojakadu.sql` — eemaldatud mittevajalik `::integer` cast (rida 156)
+## 1. `int_soojakadu.sql` — `::integer` cast on vajalik (rida 156), esialgne "parandus" oli ekslik ja tühistatud
 
 **Fail**: `dbt_project/models/intermediate/int_soojakadu.sql`
 
-**Enne**:
+**Algne kood (töötav)** :
 ```sql
 JOIN ov_jaam oj ON h.ov_kood = oj.ov_kood::integer
 ```
 
-**Pärast**:
-```sql
-JOIN ov_jaam oj ON h.ov_kood = oj.ov_kood
-```
+**Miks cast on vajalik**: DuckDB inferis `omavalitsused.csv` seedist `ov_kood` INTEGER-iks (`'0120'` → `120`). Seega `stg_hooned.ov_kood` = `COALESCE(o.ov_kood, '0000')` on INTEGER (DuckDB koertseerib `'0000'` → `0`). `ov_jaam` CTE VALUES (`('0130', 'TLN')`) on aga TEXT. `::integer` teisendab TEXT-i INTEGER-iks, et JOIN toimiks.
 
-**Miks**: `stg_hooned.ov_kood` on TEXT (`COALESCE(o.ov_kood, '0000')`) ja `ov_jaam` CTE väärtused on samuti TEXT (`('0130', 'TLN')`). `::integer` cast oli mittevajalik — DuckDB tegi implitsiitse teisenduse (`'0130' → 130`), kuid standard-PostgreSQL-is tekitaks see type mismatch vea. Lisaks on see eksitav lugejale, kes eeldab, et tüübid erinevad.
+**Mõju**: JOIN töötab korrektselt — INTEGER = INTEGER.
 
-**Mõju**: JOIN töötab nüüd otsese TEXT=TEXT võrdlusena — korrektsem, portatiivsem.
+> ⚠️ Esialgne ülevaatus tuvastas selle ekslikult "mittevajaliku castina" ja eemaldas selle — tagajärg: `operator does not exist: integer = text`. Cast on taastatud.
 
 ---
 
@@ -63,23 +60,25 @@ Lahendus: `pearson_r` arvutatakse üks kord eraldi `korr` CTE-s. `agg` CTE arvut
 
 ---
 
-## 3. `pearson_r.sql` — `{% raw %}...{% endraw %}` artefakt eemaldatud (rida 6)
+## 3. `pearson_r.sql` — `{{ }}` makro kommentaaris põhjustas lõpmatu rekursiooni (rida 6)
 
 **Fail**: `dbt_project/macros/pearson_r.sql`
 
 **Enne**:
 ```sql
---   SELECT ov_kood, {% raw %}{{ pearson_r(...) }}{% endraw %} AS r
+  --   SELECT ov_kood, {{ pearson_r('keskmine_temp', 'soojakadu_kwh_paevas') }} AS r
 ```
 
 **Pärast**:
 ```sql
---   SELECT ov_kood, {{ pearson_r('keskmine_temp', 'soojakadu_kwh_paevas') }} AS r
+  --   SELECT ov_kood, pearson_r('keskmine_temp', 'soojakadu_kwh_paevas') AS r
 ```
 
-**Miks**: `{% raw %}...{% endraw %}` on Jinja silt, mis ütleb mootorile "ära töötle sisu". Makro kommentaaris on see kasutu ja segadust tekitav. Tõenäoliselt kopeerimisjääk dbt dokumentatsiooni generaatorist.
+**Miks**: Jinja töötleb `{{ }}` plokke **igas kontekstis**, kaasa arvatud SQL-kommentaaride sees. Kuna see rida asus `pearson_r` makro definitsiooni sees, kutsus Jinja makrot rekursiivselt iseennast välja — `maximum recursion depth exceeded`.
 
-**Mõju**: Ainult kosmeetiline — kommentaar on nüüd puhas ja loetav.
+Algne `{% raw %}...{% endraw %}` kaitses seda — see käskis Jinja-l sisu ignoreerida. Lihtsam lahendus: eemaldada `{{ }}` kommentaarist — dokumentatsioon on endiselt arusaadav ilma Jinja süntaksita.
+
+**Mõju**: `dbt run` ja `dbt test` kompileeruvad nüüd veatult.
 
 ---
 
