@@ -99,7 +99,7 @@ add_textbox(s1, "Hoonete soojakadu ja renoveerimisprioriteedid",
             0.6, 1.0, 12.0, 1.8,
             font_size=38, bold=True, color=WHITE, align=PP_ALIGN.CENTER)
 
-add_textbox(s1, "Andmeinseneeria kursuse grupitöö  ·  2025",
+add_textbox(s1, "Andmeinseneeria kursuse grupitöö  ·  2026",
             0.6, 2.9, 12.0, 0.6,
             font_size=20, color=LIGHT_BLUE, align=PP_ALIGN.CENTER)
 
