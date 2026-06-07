@@ -131,3 +131,9 @@ Airflow DAG teeb järjekorras:
 | **Erkki Laaneoks** | Teisendused — dbt mudelid, soojakao arvutus, mart-kiht |
 | **Mihkel Nugis** | Andmekvaliteet — dbt testid, vigade diagnoos |
 | **Anna-Liisa Altmets** | Visualiseerimine — Superset näidikulaud |
+
+---
+
+## Esitlus
+
+[docs/esitlus.pptx](docs/esitlus.pptx)
