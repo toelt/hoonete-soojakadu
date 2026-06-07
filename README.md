@@ -97,6 +97,18 @@ docker compose up -d
 #    http://localhost:8088
 ```
 
+### Superseti dashboard import
+
+Dashboardi fail asub `superset/dashboards/dashboard_export_20260607T133641.zip`.
+
+1. **Dashboards → + → Import dashboard** → vali ZIP-fail
+2. Pärast importi mine **Settings → Database Connections → `projekt_hooned` → Edit**
+3. Uuenda parool URI-s (`XXXXXXXXXX` → `projekt`):
+   ```
+   postgresql+psycopg2://projekt:projekt@analytics-db:5432/projekt
+   ```
+4. **Test Connection** → **Save**
+
 Airflow DAG teeb järjekorras:
 1. Laadib ehitisregistri, ilmaandmed, elektrihinnad ja tarbimise
 2. Käivitab `dbt build` (seed + run) — ehitab kõik mudelid
